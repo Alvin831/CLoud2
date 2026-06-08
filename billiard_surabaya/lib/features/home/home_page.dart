@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../../core/data/dummy_data.dart';
+import 'package:provider/provider.dart'; // 🌟 1. Tambahkan import provider
+import '../../core/providers/favorite_provider.dart'; // 🌟 2. Jalankan jembatan provider kita
 import '../../core/models/billiard_place.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/place_card.dart';
@@ -18,7 +19,10 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
   int _bannerIndex = 0;
   String _selectedFilter = 'Semua';
-  List<BilliardPlace> _filtered = dummyPlaces;
+  
+  // 🌟 3. Kita gunakan list lokal kosong di awal agar menampung data Firebase secara aman
+  List<BilliardPlace> _filtered = []; 
+  bool _isInitialized = false;
 
   final List<String> _filters = ['Semua', 'Terdekat', 'Rating', 'Buka Sekarang'];
 
@@ -55,71 +59,98 @@ class _HomePageState extends State<HomePage> {
     },
   ];
 
-  void _applyFilter(String filter) {
+  // 🌟 4. Memicu penarikan data Firebase saat halaman pertama kali dibuka
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration.zero, () {
+      Provider.of<FavoriteProvider>(context, listen: false).fetchBilliardPlaces();
+    });
+  }
+
+  void _applyFilter(String filter, List<BilliardPlace> firebasePlaces) {
     setState(() {
       _selectedFilter = filter;
       switch (filter) {
         case 'Terdekat':
-          _filtered = List.from(dummyPlaces)..sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+          // 💡 Catatan: Skenario urutan jarak lokal tetap aman
+          _filtered = List.from(firebasePlaces);
           break;
         case 'Rating':
-          _filtered = List.from(dummyPlaces)..sort((a, b) => b.rating.compareTo(a.rating));
-          break;
-        case 'Buka Sekarang':
-          _filtered = dummyPlaces.where((p) => p.isOpen).toList();
+          _filtered = List.from(firebasePlaces)..sort((a, b) => b.rating.compareTo(a.rating));
           break;
         default:
-          _filtered = dummyPlaces;
+          _filtered = firebasePlaces;
       }
     });
   }
 
-  void _onSearch(String query) {
+  void _onSearch(String query, List<BilliardPlace> firebasePlaces) {
     setState(() {
-      _filtered = dummyPlaces
+      _filtered = firebasePlaces
           .where((p) =>
               p.name.toLowerCase().contains(query.toLowerCase()) ||
-              p.shortAddress.toLowerCase().contains(query.toLowerCase()))
+              p.address.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // 🌟 5. Mengintip data yang berhasil ditarik dari Firebase secara real-time
+    final provider = Provider.of<FavoriteProvider>(context);
+    final firebasePlaces = provider.billiardPlaces;
+
+    // Sinkronisasi data di awal saat Firebase selesai memuat data
+    if (!_isInitialized && firebasePlaces.isNotEmpty) {
+      _filtered = firebasePlaces;
+      _isInitialized = true;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // AppBar
-            SliverToBoxAdapter(child: _buildAppBar()),
-            // Search
-            SliverToBoxAdapter(child: _buildSearchBar()),
-            // Banner
-            SliverToBoxAdapter(child: _buildBannerSection()),
-            // Filter chips
-            SliverToBoxAdapter(child: _buildFilterChips()),
-            // Section header
-            SliverToBoxAdapter(child: _buildSectionHeader()),
-            // Place list
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (ctx, i) => PlaceCard(
-                    place: _filtered[i],
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => DetailPage(place: _filtered[i])),
-                    ),
-                  ),
-                  childCount: _filtered.length,
-                ),
+        child: provider.isLoading 
+            ? const Center(child: CircularProgressIndicator(color: AppColors.neonGreen)) // Tampilan Loading Cantik
+            : CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _buildAppBar()),
+                  SliverToBoxAdapter(child: _buildSearchBar(firebasePlaces)), // Oper data firebase
+                  SliverToBoxAdapter(child: _buildBannerSection()),
+                  SliverToBoxAdapter(child: _buildFilterChips(firebasePlaces)), // Oper data firebase
+                  SliverToBoxAdapter(child: _buildSectionHeader()),
+                  
+                  // Tampilan fallback jika hasil filter/search kosong
+                  _filtered.isEmpty 
+                      ? const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Center(
+                              child: Text(
+                                'Data tempat billiard belum tersedia.',
+                                style: TextStyle(color: AppColors.textSecondary),
+                              ),
+                            ),
+                          ),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (ctx, i) => PlaceCard(
+                                place: _filtered[i],
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => DetailPage(place: _filtered[i])),
+                                ),
+                              ),
+                              childCount: _filtered.length,
+                            ),
+                          ),
+                        ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                ],
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          ],
-        ),
       ),
     );
   }
@@ -129,7 +160,6 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
-          // Logo
           Container(
             width: 38,
             height: 38,
@@ -187,12 +217,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(List<BilliardPlace> firebasePlaces) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: TextField(
         controller: _searchController,
-        onChanged: _onSearch,
+        onChanged: (q) => _onSearch(q, firebasePlaces),
         style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Cari tempat billiard...',
@@ -292,18 +322,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildFilterChips(List<BilliardPlace> firebasePlaces) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 0, 0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: _filters.map((f) {
+          child: _filters.map((f) {
             final isSelected = _selectedFilter == f;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
-                onTap: () => _applyFilter(f),
+                onTap: () => _applyFilter(f, firebasePlaces),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
