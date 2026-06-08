@@ -1,52 +1,97 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class BilliardPlace {
   final String id;
   final String name;
-  final String address;
-  final String shortAddress; // Dibutuhkan oleh fitur Search di HomePage
+  final String shortAddress;
+  final String fullAddress;
+  final String description;
   final double rating;
-  final double lat;
-  final double lng;
-  final int categoryId;
-  
-  // Dua variabel ini wajib ada karena UI temanmu memanggilnya
+  final int reviewCount;
   final double distanceKm;
+  final String imageUrl;
+  final List<String> galleryImages;
   final bool isOpen;
+  final String operatingHours;
+  final double pricePerHour;
+  final double latitude;
+  final double longitude;
+  final List<String> facilities;
+  final int tableCount;
 
-  BilliardPlace({
+  const BilliardPlace({
     required this.id,
     required this.name,
-    required this.address,
     required this.shortAddress,
+    required this.fullAddress,
+    required this.description,
     required this.rating,
-    required this.lat,
-    required this.lng,
-    required this.categoryId,
+    required this.reviewCount,
     required this.distanceKm,
+    required this.imageUrl,
+    required this.galleryImages,
     required this.isOpen,
+    required this.operatingHours,
+    required this.pricePerHour,
+    required this.latitude,
+    required this.longitude,
+    required this.facilities,
+    required this.tableCount,
   });
 
-  // Fungsi Penerjemah dari Firebase ke format Flutter
-  factory BilliardPlace.fromFirestore(Map<String, dynamic> json, String id) {
+  // ── Factory: konversi Firestore DocumentSnapshot → BilliardPlace ───────────
+  factory BilliardPlace.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
+    final address = data['address'] as String? ?? 'Surabaya';
+    // Potong shortAddress maksimal 40 karakter agar muat di card
+    final shortAddr =
+        address.length > 40 ? '${address.substring(0, 40)}...' : address;
+
+    return BilliardPlace(
+      id: doc.id,
+      name: data['name'] as String? ?? 'Tanpa Nama',
+      shortAddress: shortAddr,
+      fullAddress: address,
+
+      // Field berikut opsional di Firestore — pakai default jika tidak ada
+      description: data['description'] as String? ??
+          'Tempat billiard terbaik di Surabaya.',
+      rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: (data['review_count'] as num?)?.toInt() ?? 0,
+      distanceKm: 0.0, // akan diisi ulang oleh PlaceService.attachDistances()
+      imageUrl: data['image_url'] as String? ?? '',
+      galleryImages: List<String>.from(data['gallery_images'] ?? []),
+      isOpen: data['is_open'] as bool? ?? true,
+      operatingHours: data['operating_hours'] as String? ?? '10:00 – 24:00',
+      pricePerHour: (data['price_per_hour'] as num?)?.toDouble() ?? 0.0,
+      latitude: (data['lat'] as num?)?.toDouble() ?? 0.0,
+      longitude: (data['lng'] as num?)?.toDouble() ?? 0.0,
+      facilities: List<String>.from(data['facilities'] ?? []),
+      tableCount: (data['table_count'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  // ── copyWith: dipakai untuk update distanceKm setelah GPS didapat ──────────
+  BilliardPlace copyWith({double? distanceKm}) {
     return BilliardPlace(
       id: id,
-      name: json['name'] ?? 'Tanpa Nama',
-      address: json['address'] ?? 'Tanpa Alamat',
-      
-      // Karena Firebase-mu tidak punya 'shortAddress', kita isi saja menggunakan data 'address'
-      shortAddress: json['address'] ?? 'Tanpa Alamat', 
-      
-      // Pakai 'num?' agar aman meskipun di Firebase ratingnya kamu ketik angka bulat seperti 4 (int)
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      
-      // Koordinat & Kategori
-      lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
-      lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
-      categoryId: (json['category_id'] as num?)?.toInt() ?? 0,
-      
-      // KARENA 2 DATA INI TIDAK ADA DI FIREBASE, kita kasih nilai default (palsu sementara)
-      // agar tampilan UI kartu di aplikasi tidak mogok/crash.
-      distanceKm: 0.0, // Anggap jaraknya 0 km semua untuk sementara
-      isOpen: true,    // Anggap tempat biliarnya selalu buka
+      name: name,
+      shortAddress: shortAddress,
+      fullAddress: fullAddress,
+      description: description,
+      rating: rating,
+      reviewCount: reviewCount,
+      distanceKm: distanceKm ?? this.distanceKm,
+      imageUrl: imageUrl,
+      galleryImages: galleryImages,
+      isOpen: isOpen,
+      operatingHours: operatingHours,
+      pricePerHour: pricePerHour,
+      latitude: latitude,
+      longitude: longitude,
+      facilities: facilities,
+      tableCount: tableCount,
     );
   }
 }

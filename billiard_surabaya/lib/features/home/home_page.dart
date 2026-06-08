@@ -1,8 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:provider/provider.dart'; // 🌟 1. Tambahkan import provider
-import '../../core/providers/favorite_provider.dart'; // 🌟 2. Jalankan jembatan provider kita
+import '../../core/data/place_service.dart';
 import '../../core/models/billiard_place.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/place_card.dart';
@@ -17,12 +17,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
+  final PlaceService _placeService = PlaceService();
+
   int _bannerIndex = 0;
   String _selectedFilter = 'Semua';
-  
-  // 🌟 3. Kita gunakan list lokal kosong di awal agar menampung data Firebase secara aman
-  List<BilliardPlace> _filtered = []; 
-  bool _isInitialized = false;
+
+  // ─── State Firebase (menggantikan dummyPlaces) ───────────────────────────
+  List<BilliardPlace> _allPlaces = [];
+  List<BilliardPlace> _filtered = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   final List<String> _filters = ['Semua', 'Terdekat', 'Rating', 'Buka Sekarang'];
 
@@ -59,102 +63,136 @@ class _HomePageState extends State<HomePage> {
     },
   ];
 
-  // 🌟 4. Memicu penarikan data Firebase saat halaman pertama kali dibuka
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () {
-      Provider.of<FavoriteProvider>(context, listen: false).fetchBilliardPlaces();
-    });
+    _loadPlaces();
   }
 
-  void _applyFilter(String filter, List<BilliardPlace> firebasePlaces) {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // ─── Data Fetching ────────────────────────────────────────────────────────
+  Future<void> _loadPlaces() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final places = await _placeService.fetchPlaces();
+
+      setState(() {
+        _allPlaces = places;
+        _filtered = places;
+        _isLoading = false;
+      });
+    } on FirebaseException catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Gagal memuat data Firebase: ${e.message}';
+      });
+    } catch (_) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Koneksi internet terputus, gagal memuat data cloud.';
+      });
+    }
+  }
+
+  // ─── Filter & Search ──────────────────────────────────────────────────────
+  void _applyFilter(String filter) {
     setState(() {
       _selectedFilter = filter;
       switch (filter) {
         case 'Terdekat':
-          // 💡 Catatan: Skenario urutan jarak lokal tetap aman
-          _filtered = List.from(firebasePlaces);
+          _filtered = List.from(_allPlaces)
+            ..sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
           break;
         case 'Rating':
-          _filtered = List.from(firebasePlaces)..sort((a, b) => b.rating.compareTo(a.rating));
+          _filtered = List.from(_allPlaces)
+            ..sort((a, b) => b.rating.compareTo(a.rating));
+          break;
+        case 'Buka Sekarang':
+          _filtered = _allPlaces.where((p) => p.isOpen).toList();
           break;
         default:
-          _filtered = firebasePlaces;
+          _filtered = _allPlaces;
       }
     });
   }
 
-  void _onSearch(String query, List<BilliardPlace> firebasePlaces) {
+  void _onSearch(String query) {
     setState(() {
-      _filtered = firebasePlaces
+      if (query.isEmpty) {
+        _filtered = _allPlaces;
+        return;
+      }
+      _filtered = _allPlaces
           .where((p) =>
               p.name.toLowerCase().contains(query.toLowerCase()) ||
-              p.address.toLowerCase().contains(query.toLowerCase()))
+              p.shortAddress.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
 
+  // ─── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    // 🌟 5. Mengintip data yang berhasil ditarik dari Firebase secara real-time
-    final provider = Provider.of<FavoriteProvider>(context);
-    final firebasePlaces = provider.billiardPlaces;
-
-    // Sinkronisasi data di awal saat Firebase selesai memuat data
-    if (!_isInitialized && firebasePlaces.isNotEmpty) {
-      _filtered = firebasePlaces;
-      _isInitialized = true;
-    }
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: provider.isLoading 
-            ? const Center(child: CircularProgressIndicator(color: AppColors.neonGreen)) // Tampilan Loading Cantik
-            : CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildAppBar()),
-                  SliverToBoxAdapter(child: _buildSearchBar(firebasePlaces)), // Oper data firebase
-                  SliverToBoxAdapter(child: _buildBannerSection()),
-                  SliverToBoxAdapter(child: _buildFilterChips(firebasePlaces)), // Oper data firebase
-                  SliverToBoxAdapter(child: _buildSectionHeader()),
-                  
-                  // Tampilan fallback jika hasil filter/search kosong
-                  _filtered.isEmpty 
-                      ? const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(32.0),
-                            child: Center(
-                              child: Text(
-                                'Data tempat billiard belum tersedia.',
-                                style: TextStyle(color: AppColors.textSecondary),
-                              ),
-                            ),
-                          ),
-                        )
-                      : SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (ctx, i) => PlaceCard(
-                                place: _filtered[i],
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => DetailPage(place: _filtered[i])),
-                                ),
-                              ),
-                              childCount: _filtered.length,
-                            ),
-                          ),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildAppBar()),
+            SliverToBoxAdapter(child: _buildSearchBar()),
+            SliverToBoxAdapter(child: _buildBannerSection()),
+            SliverToBoxAdapter(child: _buildFilterChips()),
+            SliverToBoxAdapter(child: _buildSectionHeader()),
+
+            // ── Kondisi: Loading / Error / Data ──────────────────────────
+            if (_isLoading)
+              const SliverToBoxAdapter(child: _LoadingState())
+            else if (_errorMessage != null)
+              SliverToBoxAdapter(
+                child: _ErrorState(
+                  message: _errorMessage!,
+                  onRetry: _loadPlaces,
+                ),
+              )
+            else if (_filtered.isEmpty)
+              const SliverToBoxAdapter(child: _EmptyState())
+            else
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (ctx, i) => PlaceCard(
+                      place: _filtered[i],
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DetailPage(place: _filtered[i]),
                         ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                ],
+                      ),
+                    ),
+                    childCount: _filtered.length,
+                  ),
+                ),
               ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        ),
       ),
     );
   }
 
+  // ─── Widgets (tidak ada perubahan dari versi temanmu) ─────────────────────
   Widget _buildAppBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -175,13 +213,16 @@ class _HomePageState extends State<HomePage> {
             children: [
               const Text(
                 'Billiard Surabaya',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary),
               ),
               Row(
-                children: [
-                  const Icon(Icons.location_on_rounded, color: AppColors.neonGreen, size: 12),
-                  const SizedBox(width: 2),
-                  const Text(
+                children: const [
+                  Icon(Icons.location_on_rounded, color: AppColors.neonGreen, size: 12),
+                  SizedBox(width: 2),
+                  Text(
                     'Surabaya, Jawa Timur',
                     style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                   ),
@@ -194,14 +235,16 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {},
             icon: Stack(
               children: [
-                const Icon(Icons.notifications_outlined, color: AppColors.textPrimary, size: 26),
+                const Icon(Icons.notifications_outlined,
+                    color: AppColors.textPrimary, size: 26),
                 Positioned(
                   top: 0,
                   right: 0,
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(color: AppColors.neonGreen, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                        color: AppColors.neonGreen, shape: BoxShape.circle),
                   ),
                 ),
               ],
@@ -217,16 +260,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchBar(List<BilliardPlace> firebasePlaces) {
+  Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: TextField(
         controller: _searchController,
-        onChanged: (q) => _onSearch(q, firebasePlaces),
+        onChanged: _onSearch,
         style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Cari tempat billiard...',
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
+          prefixIcon:
+              const Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
           suffixIcon: Container(
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -286,20 +330,25 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const SizedBox(height: 10),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.25),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(
                               'Selengkapnya →',
-                              style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(banner['icon'] as IconData, color: Colors.white.withOpacity(0.3), size: 64),
+                    Icon(banner['icon'] as IconData,
+                        color: Colors.white.withOpacity(0.3), size: 64),
                   ],
                 ),
               );
@@ -322,26 +371,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFilterChips(List<BilliardPlace> firebasePlaces) {
+  Widget _buildFilterChips() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 0, 0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          child: _filters.map((f) {
+          children: _filters.map((f) {
             final isSelected = _selectedFilter == f;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
-                onTap: () => _applyFilter(f, firebasePlaces),
+                onTap: () => _applyFilter(f),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.neonGreen : AppColors.surfaceVariant,
+                    color: isSelected
+                        ? AppColors.neonGreen
+                        : AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isSelected ? AppColors.neonGreen : AppColors.divider,
+                      color:
+                          isSelected ? AppColors.neonGreen : AppColors.divider,
                     ),
                   ),
                   child: Text(
@@ -368,7 +421,10 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Text(
             'Tempat Billiard',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary),
           ),
           const SizedBox(width: 6),
           Container(
@@ -379,11 +435,105 @@ class _HomePageState extends State<HomePage> {
             ),
             child: Text(
               '${_filtered.length}',
-              style: const TextStyle(fontSize: 11, color: AppColors.neonGreen, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.neonGreen,
+                  fontWeight: FontWeight.w600),
             ),
           ),
           const Spacer(),
-          const Text('Lihat Semua', style: TextStyle(fontSize: 12, color: AppColors.neonGreen)),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedFilter = 'Semua';
+                _filtered = _allPlaces;
+                _searchController.clear();
+              });
+            },
+            child: const Text('Lihat Semua',
+                style: TextStyle(fontSize: 12, color: AppColors.neonGreen)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Helper Widgets ───────────────────────────────────────────────────────────
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 60),
+      child: Column(
+        children: [
+          CircularProgressIndicator(color: AppColors.neonGreen),
+          SizedBox(height: 16),
+          Text(
+            'Memuat data dari cloud...',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorState({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+      child: Column(
+        children: [
+          const Icon(Icons.wifi_off_rounded, size: 56, color: Colors.redAccent),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Coba Lagi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.neonGreen,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 48),
+      child: Column(
+        children: [
+          Icon(Icons.search_off_rounded, size: 48, color: AppColors.textMuted),
+          SizedBox(height: 12),
+          Text(
+            'Tempat tidak ditemukan',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
         ],
       ),
     );

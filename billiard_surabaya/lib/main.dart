@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 // Import file konfigurasi manual yang baru kita buat tadi
 import 'firebase_options.dart'; 
 // Import provider kelompokmu (sesuaikan path ini jika nama filenya berbeda)
-import 'core/providers/favorite_provider.dart'; 
+import 'core/providers/favorite_provider.dart';
+import 'core/theme/app_theme.dart';
+import 'features/main/main_shell.dart'; 
 
 void main() async {
   // 1. Wajib ditambahkan agar Flutter bisa menjalankan kode native (async) sebelum runApp
@@ -30,17 +32,10 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Billiard Surabaya',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.darkTheme,
         // Sesuai screenshot struktur foldermu, arahkan ke halaman utama yang dibuat temanmu
         // Gantilah 'HomeScreen()' dengan nama Class halaman utama milik temanmu jika berbeda
-        home: const Scaffold(
-          body: Center(
-            child: Text('Firebase Berhasil Terkoneksi!'),
-          ),
-        ),
+        home: const MainShell(),
       ),
     );
   }
