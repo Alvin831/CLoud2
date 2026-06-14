@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/models/billiard_place.dart';
 import '../../core/providers/favorite_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/place_image.dart';
 
 class DetailPage extends StatefulWidget {
   final BilliardPlace place;
@@ -148,10 +149,13 @@ class _DetailPageState extends State<DetailPage> {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              p.galleryImages[_selectedImageIndex],
+            PlaceImage(
+              imagePath: p.imagePath,
+              imageUrl: p.galleryImages.isNotEmpty
+                  ? p.galleryImages[_selectedImageIndex]
+                  : p.imageUrl,
+              height: 280,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: AppColors.surfaceVariant),
             ),
             // Gradient overlay
             const DecoratedBox(
@@ -370,8 +374,12 @@ class _DetailPageState extends State<DetailPage> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(9),
-                  child: Image.network(p.galleryImages[i], fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(color: AppColors.surfaceVariant)),
+                  child: PlaceImage(
+                    imagePath: p.imagePath,
+                    imageUrl: p.galleryImages[i],
+                    height: 90,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),

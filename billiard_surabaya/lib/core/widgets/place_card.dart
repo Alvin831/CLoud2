@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/billiard_place.dart';
 import '../theme/app_theme.dart';
+import 'place_image.dart';
 
 class PlaceCard extends StatelessWidget {
   final BilliardPlace place;
@@ -27,16 +28,10 @@ class PlaceCard extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: Stack(
                 children: [
-                  Image.network(
-                    place.imageUrl,
+                  PlaceImage(
+                    imagePath: place.imagePath,
+                    imageUrl: place.imageUrl,
                     height: 160,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 160,
-                      color: AppColors.surfaceVariant,
-                      child: const Icon(Icons.image_not_supported, color: AppColors.textMuted, size: 48),
-                    ),
                   ),
                   // Status badge
                   Positioned(
