@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import '../../core/data/dummy_data.dart';
 import '../../core/data/place_service.dart';
 import '../../core/models/billiard_place.dart';
 import '../../core/theme/app_theme.dart';
@@ -86,20 +87,21 @@ class _HomePageState extends State<HomePage> {
 
       final places = await _placeService.fetchPlaces();
 
+      // Fallback ke dummy data kalau Firestore kosong
+      final result = places.isEmpty ? dummyPlaces : places;
+
       setState(() {
-        _allPlaces = places;
-        _filtered = places;
+        _allPlaces = result;
+        _filtered = result;
         _isLoading = false;
       });
-    } on FirebaseException catch (e) {
+    } catch (e) {
+      // Firestore error → pakai dummy data agar app tetap jalan
       setState(() {
+        _allPlaces = dummyPlaces;
+        _filtered = dummyPlaces;
         _isLoading = false;
-        _errorMessage = 'Gagal memuat data Firebase: ${e.message}';
-      });
-    } catch (_) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Koneksi internet terputus, gagal memuat data cloud.';
+        _errorMessage = null; // tidak tampilkan error, cukup pakai dummy
       });
     }
   }

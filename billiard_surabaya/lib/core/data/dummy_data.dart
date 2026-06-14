@@ -12,6 +12,7 @@ final List<BilliardPlace> dummyPlaces = [
     reviewCount: 342,
     distanceKm: 1.2,
     imageUrl: 'https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800',
+    imagePath: null, // isi dengan nama file jika ada di assets/images/
     galleryImages: [
       'https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800',
       'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',

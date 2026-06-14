@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-// Import file konfigurasi manual yang baru kita buat tadi
-import 'firebase_options.dart'; 
-// Import provider kelompokmu (sesuaikan path ini jika nama filenya berbeda)
+import 'firebase_options.dart';
 import 'core/providers/favorite_provider.dart';
 import 'core/theme/app_theme.dart';
-import 'features/main/main_shell.dart'; 
+import 'features/main/main_shell.dart';
 
 void main() async {
-  // 1. Wajib ditambahkan agar Flutter bisa menjalankan kode native (async) sebelum runApp
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // 2. Nyalakan koneksi Firebase menggunakan opsi manual yang kita racik
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
 
-  // 3. Jalankan aplikasi
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // ignore: avoid_print
+    print('Firebase init error: $e');
+  }
+
   runApp(const MyApp());
 }
 
