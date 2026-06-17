@@ -8,7 +8,7 @@ import 'core/providers/auth_provider.dart' as app_auth;
 import 'core/providers/billiard_provider.dart';
 import 'core/providers/favorite_provider.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/login_page.dart';
+import 'features/onboarding/onboarding_page.dart';
 import 'features/main/main_shell.dart';
 
 void main() async {
@@ -26,13 +26,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Provider autentikasi — dipakai seluruh app
         ChangeNotifierProvider(create: (_) => app_auth.AuthProvider()),
-        // Provider data biliar — pre-fetch data saat pertama kali dibuat
         ChangeNotifierProvider(
           create: (_) => BilliardProvider()..fetchPlaces(),
         ),
-        // Provider favorit — state lokal sementara
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
       ],
       child: MaterialApp(
@@ -45,8 +42,9 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// AuthGate memutuskan halaman mana yang ditampilkan
-/// berdasarkan status login user dari Firebase.
+/// AuthGate:
+/// - Jika sudah login → MainShell langsung
+/// - Jika belum login → Onboarding (bisa jelajahi sebagai tamu)
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -55,18 +53,18 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Masih menunggu status dari Firebase
+        // Tunggu Firebase
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const _SplashScreen();
         }
 
-        // User sudah login → masuk ke app utama
+        // Sudah login → langsung ke app
         if (snapshot.hasData && snapshot.data != null) {
           return const MainShell();
         }
 
-        // Belum login → halaman login
-        return const LoginPage();
+        // Belum login → onboarding (bisa lanjut sebagai tamu)
+        return const OnboardingPage();
       },
     );
   }

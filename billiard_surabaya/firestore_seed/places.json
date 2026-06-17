@@ -1,0 +1,281 @@
+[
+  {
+    "name": "Billiard Planet Surabaya",
+    "address": "Jl. Raya Darmo No. 54, Wonokromo, Surabaya",
+    "description": "Salah satu tempat billiard paling populer di Surabaya dengan fasilitas lengkap, meja berkualitas internasional, dan suasana nyaman.",
+    "rating": 4.7,
+    "review_count": 214,
+    "image_url": "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "10:00 – 02:00",
+    "price_per_hour": 30000,
+    "lat": -7.2915,
+    "lng": 112.7349,
+    "facilities": ["AC", "WiFi", "Cafe", "Parkir Luas", "Toilet"],
+    "table_count": 18
+  },
+  {
+    "name": "Golden Cue Billiard",
+    "address": "Jl. Pemuda No. 33, Embong Kaliasin, Surabaya",
+    "description": "Tempat billiard premium di pusat kota dengan meja Brunswick dan sistem pencahayaan profesional.",
+    "rating": 4.5,
+    "review_count": 187,
+    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "11:00 – 01:00",
+    "price_per_hour": 35000,
+    "lat": -7.2669,
+    "lng": 112.7424,
+    "facilities": ["AC", "WiFi", "Snack Bar", "Loker", "Toilet"],
+    "table_count": 12
+  },
+  {
+    "name": "Ace Billiard Club",
+    "address": "Jl. Kertajaya No. 87, Gubeng, Surabaya",
+    "description": "Club billiard dengan atmosfer kompetitif, sering menjadi venue turnamen lokal Surabaya.",
+    "rating": 4.6,
+    "review_count": 156,
+    "image_url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "09:00 – 24:00",
+    "price_per_hour": 25000,
+    "lat": -7.2721,
+    "lng": 112.7588,
+    "facilities": ["AC", "WiFi", "Parkir", "Toilet", "Ruang VIP"],
+    "table_count": 15
+  },
+  {
+    "name": "Break Point Billiard",
+    "address": "Jl. Rungkut Industri No. 12, Rungkut, Surabaya",
+    "description": "Billiard modern di kawasan Rungkut dengan harga terjangkau dan suasana santai.",
+    "rating": 4.2,
+    "review_count": 98,
+    "image_url": "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "12:00 – 24:00",
+    "price_per_hour": 20000,
+    "lat": -7.3254,
+    "lng": 112.7891,
+    "facilities": ["AC", "Parkir", "Toilet", "Mini Mart"],
+    "table_count": 8
+  },
+  {
+    "name": "Straight Shot Billiard",
+    "address": "Jl. Mayjend Sungkono No. 78, Dukuh Pakis, Surabaya",
+    "description": "Tempat billiard keluarga di kawasan Sungkono, cocok untuk pemula hingga profesional.",
+    "rating": 4.4,
+    "review_count": 132,
+    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "10:00 – 23:00",
+    "price_per_hour": 28000,
+    "lat": -7.2873,
+    "lng": 112.7108,
+    "facilities": ["AC", "WiFi", "Cafe", "Parkir", "Toilet"],
+    "table_count": 10
+  },
+  {
+    "name": "Corner Pocket Billiard",
+    "address": "Jl. Kenjeran No. 45, Bulak, Surabaya",
+    "description": "Billiard di area Kenjeran dengan view pantai, menawarkan pengalaman bermain yang unik.",
+    "rating": 4.0,
+    "review_count": 76,
+    "image_url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800"
+    ],
+    "is_open": false,
+    "operating_hours": "14:00 – 24:00",
+    "price_per_hour": 20000,
+    "lat": -7.2198,
+    "lng": 112.8012,
+    "facilities": ["Parkir", "Toilet", "Warung Makan"],
+    "table_count": 6
+  },
+  {
+    "name": "Elite Billiard Lounge",
+    "address": "Jl. Basuki Rahmat No. 101, Embong Kaliasin, Surabaya",
+    "description": "Lounge billiard premium dengan desain interior mewah, minuman berkualitas, dan layanan profesional.",
+    "rating": 4.8,
+    "review_count": 245,
+    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "15:00 – 03:00",
+    "price_per_hour": 50000,
+    "lat": -7.2651,
+    "lng": 112.7398,
+    "facilities": ["AC", "WiFi", "Bar", "Loker", "Valet Parking", "Ruang VIP"],
+    "table_count": 20
+  },
+  {
+    "name": "Billiard 88 Surabaya",
+    "address": "Jl. Ngagel Jaya No. 22, Wonokromo, Surabaya",
+    "description": "Tempat billiard legendaris di Surabaya yang sudah berdiri sejak 2005, dikenal dengan meja yang terawat.",
+    "rating": 4.3,
+    "review_count": 167,
+    "image_url": "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "10:00 – 24:00",
+    "price_per_hour": 22000,
+    "lat": -7.2978,
+    "lng": 112.7445,
+    "facilities": ["AC", "Parkir", "Toilet", "Snack"],
+    "table_count": 14
+  },
+  {
+    "name": "Pro Cue Billiard Center",
+    "address": "Jl. HR Muhammad No. 45, Pradah Kali Kendal, Surabaya",
+    "description": "Pusat billiard terlengkap di Surabaya Barat dengan 22 meja dan area latihan khusus.",
+    "rating": 4.6,
+    "review_count": 198,
+    "image_url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "09:00 – 01:00",
+    "price_per_hour": 30000,
+    "lat": -7.2844,
+    "lng": 112.6987,
+    "facilities": ["AC", "WiFi", "Cafe", "Parkir Luas", "Toilet", "Area Latihan"],
+    "table_count": 22
+  },
+  {
+    "name": "Hustle Billiard",
+    "address": "Jl. Mulyosari No. 67, Mulyorejo, Surabaya",
+    "description": "Spot billiard hits anak muda Surabaya Timur. Musik asik, harga oke, buka sampai dini hari.",
+    "rating": 4.1,
+    "review_count": 89,
+    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "14:00 – 03:00",
+    "price_per_hour": 18000,
+    "lat": -7.2589,
+    "lng": 112.7798,
+    "facilities": ["AC", "WiFi", "Snack Bar", "Parkir", "Sound System"],
+    "table_count": 9
+  },
+  {
+    "name": "Dynasty Billiard",
+    "address": "Jl. Kutisari No. 30, Tenggilis Mejoyo, Surabaya",
+    "description": "Billiard dengan konsep Chinese-style, tersedia meja snooker dan 9-ball.",
+    "rating": 4.4,
+    "review_count": 112,
+    "image_url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "11:00 – 24:00",
+    "price_per_hour": 25000,
+    "lat": -7.3312,
+    "lng": 112.7654,
+    "facilities": ["AC", "Parkir", "Toilet", "Meja Snooker"],
+    "table_count": 11
+  },
+  {
+    "name": "Jackpot Billiard",
+    "address": "Jl. Pahlawan No. 15, Krembangan, Surabaya",
+    "description": "Tempat billiard klasik di kawasan kota tua Surabaya, nuansa retro dengan harga bersahabat.",
+    "rating": 3.9,
+    "review_count": 67,
+    "image_url": "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "10:00 – 22:00",
+    "price_per_hour": 15000,
+    "lat": -7.2413,
+    "lng": 112.7335,
+    "facilities": ["Kipas Angin", "Parkir Motor", "Toilet"],
+    "table_count": 7
+  },
+  {
+    "name": "Cue Sports Surabaya",
+    "address": "Jl. Citraland Boulevard, Sambikerep, Surabaya",
+    "description": "Venue billiard premium di kawasan Citraland, fasilitas bintang lima untuk para pecinta cue sports.",
+    "rating": 4.7,
+    "review_count": 178,
+    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "10:00 – 00:00",
+    "price_per_hour": 45000,
+    "lat": -7.2756,
+    "lng": 112.6721,
+    "facilities": ["AC", "WiFi", "Restaurant", "Valet Parking", "Toilet", "Ruang VIP"],
+    "table_count": 16
+  },
+  {
+    "name": "Smash Billiard Kalijudan",
+    "address": "Jl. Kalijudan No. 88, Mulyorejo, Surabaya",
+    "description": "Billiard ramai dekat kampus ITS dan UNAIR, harga mahasiswa dan buka 24 jam.",
+    "rating": 4.2,
+    "review_count": 203,
+    "image_url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "24 Jam",
+    "price_per_hour": 15000,
+    "lat": -7.2631,
+    "lng": 112.7712,
+    "facilities": ["AC", "WiFi", "Warung Kopi", "Parkir", "Toilet"],
+    "table_count": 12
+  },
+  {
+    "name": "Top Spin Billiard",
+    "address": "Jl. Wiyung Raya No. 56, Wiyung, Surabaya",
+    "description": "Billiard terbaru di Surabaya Barat dengan interior modern dan meja Aramith profesional.",
+    "rating": 4.5,
+    "review_count": 91,
+    "image_url": "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800",
+    "gallery_images": [
+      "https://images.unsplash.com/photo-1615361200141-f45040f367be?w=800",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800"
+    ],
+    "is_open": true,
+    "operating_hours": "11:00 – 01:00",
+    "price_per_hour": 28000,
+    "lat": -7.3089,
+    "lng": 112.6934,
+    "facilities": ["AC", "WiFi", "Cafe", "Parkir Luas", "Toilet"],
+    "table_count": 13
+  }
+]

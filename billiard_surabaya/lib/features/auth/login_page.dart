@@ -317,24 +317,42 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildRegisterLink() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        const Text(
-          'Belum punya akun? ',
-          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Belum punya akun? ',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RegisterPage()),
+              ),
+              child: const Text(
+                'Daftar Sekarang',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.neonGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 16),
+        // Tamu tetap bisa masuk tanpa login
         GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const RegisterPage()),
-          ),
+          onTap: () => Navigator.of(context).popUntil((r) => r.isFirst),
           child: const Text(
-            'Daftar Sekarang',
+            'Jelajahi Tanpa Login →',
             style: TextStyle(
-              fontSize: 13,
-              color: AppColors.neonGreen,
-              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: AppColors.textMuted,
+              decoration: TextDecoration.underline,
+              decorationColor: AppColors.textMuted,
             ),
           ),
         ),
