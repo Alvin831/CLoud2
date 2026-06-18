@@ -10,6 +10,7 @@ class BilliardPlace {
   final int reviewCount;
   final double distanceKm;
   final String imageUrl;
+  final String? imagePath; // nama file lokal, e.g. "zuper.jpg"
   final List<String> galleryImages;
   final bool isOpen;
   final String operatingHours;
@@ -29,6 +30,7 @@ class BilliardPlace {
     required this.reviewCount,
     required this.distanceKm,
     required this.imageUrl,
+    this.imagePath,
     required this.galleryImages,
     required this.isOpen,
     required this.operatingHours,
@@ -61,6 +63,7 @@ class BilliardPlace {
       reviewCount: (data['review_count'] as num?)?.toInt() ?? 0,
       distanceKm: 0.0, // akan diisi ulang oleh PlaceService.attachDistances()
       imageUrl: data['image_url'] as String? ?? '',
+      imagePath: data['imagePath'] as String?,
       galleryImages: List<String>.from(data['gallery_images'] ?? []),
       isOpen: data['is_open'] as bool? ?? true,
       operatingHours: data['operating_hours'] as String? ?? '10:00 – 24:00',
@@ -84,6 +87,7 @@ class BilliardPlace {
       reviewCount: reviewCount,
       distanceKm: distanceKm ?? this.distanceKm,
       imageUrl: imageUrl,
+      imagePath: imagePath,
       galleryImages: galleryImages,
       isOpen: isOpen,
       operatingHours: operatingHours,

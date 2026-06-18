@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/favorite_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/place_image.dart';
 import '../detail/detail_page.dart';
 
 class FavoritePage extends StatelessWidget {
@@ -101,16 +102,14 @@ class FavoritePage extends StatelessWidget {
                                       // Image
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
-                                        child: Image.network(
-                                          p.imageUrl,
+                                        child: SizedBox(
                                           width: 72,
                                           height: 72,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => Container(
-                                            width: 72,
+                                          child: PlaceImage(
+                                            imagePath: p.imagePath,
+                                            imageUrl: p.imageUrl,
                                             height: 72,
-                                            color: AppColors.surfaceVariant,
-                                            child: const Icon(Icons.image_not_supported, color: AppColors.textMuted),
+                                            fit: BoxFit.cover,
                                           ),
                                         ),
                                       ),
