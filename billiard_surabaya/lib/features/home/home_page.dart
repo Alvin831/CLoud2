@@ -1,10 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../../core/data/dummy_data.dart';
-import '../../core/data/place_service.dart';
-import '../../core/models/billiard_place.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/billiard_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/place_card.dart';
 import '../detail/detail_page.dart';
@@ -18,16 +16,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
-  final PlaceService _placeService = PlaceService();
 
   int _bannerIndex = 0;
-  String _selectedFilter = 'Semua';
-
-  // ─── State Firebase (menggantikan dummyPlaces) ───────────────────────────
-  List<BilliardPlace> _allPlaces = [];
-  List<BilliardPlace> _filtered = [];
-  bool _isLoading = true;
-  String? _errorMessage;
 
   final List<String> _filters = ['Semua', 'Terdekat', 'Rating', 'Buka Sekarang'];
 
@@ -68,7 +58,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadPlaces();
   }
 
   @override
@@ -77,210 +66,287 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // ─── Data Fetching ────────────────────────────────────────────────────────
-  Future<void> _loadPlaces() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      final places = await _placeService.fetchPlaces();
-
-      // Fallback ke dummy data kalau Firestore kosong
-      final result = places.isEmpty ? dummyPlaces : places;
-
-      setState(() {
-        _allPlaces = result;
-        _filtered = result;
-        _isLoading = false;
-      });
-    } catch (e) {
-      // Firestore error → pakai dummy data agar app tetap jalan
-      setState(() {
-        _allPlaces = dummyPlaces;
-        _filtered = dummyPlaces;
-        _isLoading = false;
-        _errorMessage = null; // tidak tampilkan error, cukup pakai dummy
-      });
-    }
-  }
-
-  // ─── Filter & Search ──────────────────────────────────────────────────────
+  // ─── Filter & Search (delegasi ke BilliardProvider) ───────────────────────
   void _applyFilter(String filter) {
-    setState(() {
-      _selectedFilter = filter;
-      switch (filter) {
-        case 'Terdekat':
-          _filtered = List.from(_allPlaces)
-            ..sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
-          break;
-        case 'Rating':
-          _filtered = List.from(_allPlaces)
-            ..sort((a, b) => b.rating.compareTo(a.rating));
-          break;
-        case 'Buka Sekarang':
-          _filtered = _allPlaces.where((p) => p.isOpen).toList();
-          break;
-        default:
-          _filtered = _allPlaces;
-      }
-    });
+    context.read<BilliardProvider>().setFilter(filter);
   }
 
   void _onSearch(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filtered = _allPlaces;
-        return;
-      }
-      _filtered = _allPlaces
-          .where((p) =>
-              p.name.toLowerCase().contains(query.toLowerCase()) ||
-              p.shortAddress.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+    context.read<BilliardProvider>().setSearch(query);
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _buildAppBar()),
-            SliverToBoxAdapter(child: _buildSearchBar()),
-            SliverToBoxAdapter(child: _buildBannerSection()),
-            SliverToBoxAdapter(child: _buildFilterChips()),
-            SliverToBoxAdapter(child: _buildSectionHeader()),
-
-            // ── Kondisi: Loading / Error / Data ──────────────────────────
-            if (_isLoading)
-              const SliverToBoxAdapter(child: _LoadingState())
-            else if (_errorMessage != null)
-              SliverToBoxAdapter(
-                child: _ErrorState(
-                  message: _errorMessage!,
-                  onRetry: _loadPlaces,
-                ),
-              )
-            else if (_filtered.isEmpty)
-              const SliverToBoxAdapter(child: _EmptyState())
-            else
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => PlaceCard(
-                      place: _filtered[i],
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DetailPage(place: _filtered[i]),
+    return Consumer<BilliardProvider>(
+      builder: (context, bp, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildAppBar()),
+                SliverToBoxAdapter(child: _buildSearchBar(bp)),
+                SliverToBoxAdapter(child: _buildBannerSection()),
+                SliverToBoxAdapter(child: _buildFilterChips(bp)),
+                SliverToBoxAdapter(child: _buildSectionHeader(bp)),
+                if (bp.isLoading)
+                  const SliverToBoxAdapter(child: _LoadingState())
+                else if (bp.hasError)
+                  SliverToBoxAdapter(
+                    child: _ErrorState(
+                      message: bp.errorMessage ?? 'Terjadi kesalahan.',
+                      onRetry: bp.refresh,
+                    ),
+                  )
+                else if (bp.filteredPlaces.isEmpty)
+                  const SliverToBoxAdapter(child: _EmptyState())
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (ctx, i) => PlaceCard(
+                          place: bp.filteredPlaces[i],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  DetailPage(place: bp.filteredPlaces[i]),
+                            ),
+                          ),
                         ),
+                        childCount: bp.filteredPlaces.length,
                       ),
                     ),
-                    childCount: _filtered.length,
                   ),
-                ),
-              ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
-        ),
-      ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   // ─── Widgets (tidak ada perubahan dari versi temanmu) ─────────────────────
   Widget _buildAppBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.neonGreen,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.sports_bar_rounded, color: Colors.black, size: 22),
+    return Consumer<BilliardProvider>(
+      builder: (context, bp, _) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Row(
+            children: [
+              Container(
+                width: 38, height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.neonGreen,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.sports_bar_rounded,
+                    color: Colors.black, size: 22),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Billiard Surabaya',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary)),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded,
+                          color: bp.hasLocation
+                              ? AppColors.neonGreen
+                              : AppColors.textMuted,
+                          size: 12),
+                      const SizedBox(width: 2),
+                      Text(
+                        bp.hasLocation
+                            ? 'Lokasi aktif'
+                            : 'Surabaya, Jawa Timur',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const Spacer(),
+              // Tombol filter harga
+              GestureDetector(
+                onTap: () => _showPriceFilter(context, bp),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: bp.priceFilterActive
+                        ? AppColors.neonGreen.withValues(alpha: 0.15)
+                        : AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: bp.priceFilterActive
+                          ? AppColors.neonGreen
+                          : AppColors.divider,
+                    ),
+                  ),
+                  child: Icon(Icons.tune_rounded,
+                      color: bp.priceFilterActive
+                          ? AppColors.neonGreen
+                          : AppColors.textMuted,
+                      size: 18),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Tombol GPS
+              GestureDetector(
+                onTap: bp.locationStatus == LocationStatus.loading
+                    ? null
+                    : () => bp.requestLocation(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: bp.hasLocation
+                        ? AppColors.neonGreen.withValues(alpha: 0.15)
+                        : AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: bp.hasLocation
+                          ? AppColors.neonGreen
+                          : AppColors.divider,
+                    ),
+                  ),
+                  child: bp.locationStatus == LocationStatus.loading
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.neonGreen))
+                      : Icon(Icons.my_location_rounded,
+                          color: bp.hasLocation
+                              ? AppColors.neonGreen
+                              : AppColors.textMuted,
+                          size: 18),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Column(
+        );
+      },
+    );
+  }
+
+  void _showPriceFilter(BuildContext context, BilliardProvider bp) {
+    double tempMin = bp.minPrice;
+    double tempMax = bp.maxPrice;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Billiard Surabaya',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary),
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
+              const SizedBox(height: 20),
+              const Text('Filter Rentang Harga',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary)),
+              const SizedBox(height: 6),
+              Text(
+                'Rp ${(tempMin / 1000).toStringAsFixed(0)}k  –  Rp ${(tempMax / 1000).toStringAsFixed(0)}k / jam',
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.neonGreen),
+              ),
+              const SizedBox(height: 16),
+              RangeSlider(
+                values: RangeValues(tempMin, tempMax),
+                min: 0,
+                max: 100000,
+                divisions: 20,
+                activeColor: AppColors.neonGreen,
+                inactiveColor: AppColors.divider,
+                onChanged: (v) => setModalState(() {
+                  tempMin = v.start;
+                  tempMax = v.end;
+                }),
+              ),
+              const SizedBox(height: 16),
               Row(
-                children: const [
-                  Icon(Icons.location_on_rounded, color: AppColors.neonGreen, size: 12),
-                  SizedBox(width: 2),
-                  Text(
-                    'Surabaya, Jawa Timur',
-                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        bp.clearPriceFilter();
+                        Navigator.pop(ctx);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(color: AppColors.divider),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Reset'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        bp.setPriceRange(tempMin, tempMax);
+                        Navigator.pop(ctx);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.neonGreen,
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Terapkan',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          const Spacer(),
-          IconButton(
-            onPressed: () {},
-            icon: Stack(
-              children: [
-                const Icon(Icons.notifications_outlined,
-                    color: AppColors.textPrimary, size: 26),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                        color: AppColors.neonGreen, shape: BoxShape.circle),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const CircleAvatar(
-            radius: 18,
-            backgroundColor: AppColors.surfaceVariant,
-            child: Icon(Icons.person_rounded, color: AppColors.textSecondary, size: 20),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(BilliardProvider bp) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: TextField(
         controller: _searchController,
         onChanged: _onSearch,
         style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           hintText: 'Cari tempat billiard...',
-          prefixIcon:
-              const Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
-          suffixIcon: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.neonGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.tune_rounded, color: Colors.black, size: 18),
-          ),
+          prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
         ),
       ),
     );
@@ -373,40 +439,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildFilterChips(BilliardProvider bp) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 0, 0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: _filters.map((f) {
-            final isSelected = _selectedFilter == f;
+          children: BilliardProvider.filterOptions.map((f) {
+            final isSelected = bp.activeFilter == f;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
                 onTap: () => _applyFilter(f),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.neonGreen
-                        : AppColors.surfaceVariant,
+                    color: isSelected ? AppColors.neonGreen : AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color:
-                          isSelected ? AppColors.neonGreen : AppColors.divider,
+                      color: isSelected ? AppColors.neonGreen : AppColors.divider,
                     ),
                   ),
-                  child: Text(
-                    f,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected ? Colors.black : AppColors.textSecondary,
-                    ),
-                  ),
+                  child: Text(f,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected ? Colors.black : AppColors.textSecondary,
+                      )),
                 ),
               ),
             );
@@ -416,41 +476,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(BilliardProvider bp) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
       child: Row(
         children: [
-          const Text(
-            'Tempat Billiard',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary),
-          ),
+          const Text('Tempat Billiard',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary)),
           const SizedBox(width: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.neonGreen.withOpacity(0.15),
+              color: AppColors.neonGreen.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Text(
-              '${_filtered.length}',
-              style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.neonGreen,
-                  fontWeight: FontWeight.w600),
-            ),
+            child: Text('${bp.filteredPlaces.length}',
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.neonGreen,
+                    fontWeight: FontWeight.w600)),
           ),
           const Spacer(),
           GestureDetector(
             onTap: () {
-              setState(() {
-                _selectedFilter = 'Semua';
-                _filtered = _allPlaces;
-                _searchController.clear();
-              });
+              _searchController.clear();
+              bp.resetFilters();
             },
             child: const Text('Lihat Semua',
                 style: TextStyle(fontSize: 12, color: AppColors.neonGreen)),

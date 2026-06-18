@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/auth_provider.dart' as app_auth;
 import '../../core/providers/favorite_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../reservation/reservation_history_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -21,22 +22,25 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 24),
               _buildStatsRow(context),
               const SizedBox(height: 24),
-              _buildMenuSection('Akun', [
-                _MenuItemData(Icons.person_outline_rounded, 'Edit Profil', null),
-                _MenuItemData(Icons.card_membership_rounded, 'Keanggotaan Premium', AppColors.neonGreen),
-                _MenuItemData(Icons.history_rounded, 'Riwayat Kunjungan', null),
+              _buildMenuSection(context, 'Akun', [
+                _MenuItemData(Icons.person_outline_rounded, 'Edit Profil', null, null),
+                _MenuItemData(Icons.card_membership_rounded, 'Keanggotaan Premium', AppColors.neonGreen, null),
+                _MenuItemData(Icons.history_rounded, 'Riwayat Reservasi', null, () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ReservationHistoryPage()));
+                }),
               ]),
               const SizedBox(height: 16),
-              _buildMenuSection('Pengaturan', [
-                _MenuItemData(Icons.notifications_outlined, 'Notifikasi', null),
-                _MenuItemData(Icons.location_on_outlined, 'Lokasi', null),
-                _MenuItemData(Icons.language_rounded, 'Bahasa', null),
+              _buildMenuSection(context, 'Pengaturan', [
+                _MenuItemData(Icons.notifications_outlined, 'Notifikasi', null, null),
+                _MenuItemData(Icons.location_on_outlined, 'Lokasi', null, null),
+                _MenuItemData(Icons.language_rounded, 'Bahasa', null, null),
               ]),
               const SizedBox(height: 16),
-              _buildMenuSection('Lainnya', [
-                _MenuItemData(Icons.help_outline_rounded, 'Pusat Bantuan', null),
-                _MenuItemData(Icons.star_outline_rounded, 'Beri Rating Aplikasi', null),
-                _MenuItemData(Icons.info_outline_rounded, 'Tentang Aplikasi', null),
+              _buildMenuSection(context, 'Lainnya', [
+                _MenuItemData(Icons.help_outline_rounded, 'Pusat Bantuan', null, null),
+                _MenuItemData(Icons.star_outline_rounded, 'Beri Rating Aplikasi', null, null),
+                _MenuItemData(Icons.info_outline_rounded, 'Tentang Aplikasi', null, null),
               ]),
               const SizedBox(height: 20),
               _buildLogoutButton(context),
@@ -193,7 +197,7 @@ class ProfilePage extends StatelessWidget {
     return Container(width: 1, height: 32, color: AppColors.divider);
   }
 
-  Widget _buildMenuSection(String title, List<_MenuItemData> items) {
+  Widget _buildMenuSection(BuildContext context, String title, List<_MenuItemData> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -220,7 +224,7 @@ class ProfilePage extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color:
-                            (item.accentColor ?? AppColors.textMuted).withOpacity(0.1),
+                            (item.accentColor ?? AppColors.textMuted).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(item.icon,
@@ -242,7 +246,7 @@ class ProfilePage extends StatelessWidget {
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                     dense: true,
-                    onTap: () {},
+                    onTap: item.onTap,
                   ),
                   if (i < items.length - 1)
                     const Padding(
@@ -331,5 +335,6 @@ class _MenuItemData {
   final IconData icon;
   final String title;
   final Color? accentColor;
-  const _MenuItemData(this.icon, this.title, this.accentColor);
+  final VoidCallback? onTap;
+  const _MenuItemData(this.icon, this.title, this.accentColor, this.onTap);
 }
