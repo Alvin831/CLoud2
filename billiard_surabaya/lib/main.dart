@@ -60,10 +60,17 @@ class MyApp extends StatelessWidget {
 }
 
 /// AuthGate:
-/// - Jika sudah login → MainShell langsung
-/// - Jika belum login → Onboarding (bisa jelajahi sebagai tamu)
-class AuthGate extends StatelessWidget {
+/// - Jika sudah login → load favorit dari Firestore → MainShell
+/// - Jika belum login → clear favorit lokal → Onboarding
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  User? _previousUser;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +80,28 @@ class AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const _SplashScreen();
         }
-        if (snapshot.hasData && snapshot.data != null) {
+
+        final user = snapshot.data;
+        final favProvider = context.read<FavoriteProvider>();
+
+        // User baru login (atau app baru dibuka dengan user sudah login)
+        if (user != null && _previousUser?.uid != user.uid) {
+          _previousUser = user;
+          // Load favorit dari Firestore untuk user ini
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            favProvider.loadFavorites();
+          });
+        }
+
+        // User logout
+        if (user == null && _previousUser != null) {
+          _previousUser = null;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            favProvider.clearLocal();
+          });
+        }
+
+        if (user != null) {
           return const MainShell();
         }
         return const OnboardingPage();
