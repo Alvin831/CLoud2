@@ -101,6 +101,7 @@ class FavoriteProvider extends ChangeNotifier {
           'image_url': place.imageUrl,
           'imagePath': place.imagePath,
           'gallery_images': place.galleryImages,
+          'galleryImg': place.galleryImg,
           'is_open': place.isOpen,
           'operating_hours': place.operatingHours,
           'price_per_hour': place.pricePerHour,

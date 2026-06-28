@@ -386,11 +386,15 @@ class _HomePageState extends State<HomePage> {
                               color: Colors.white,
                               height: 1.3,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             banner['subtitle'] as String,
                             style: const TextStyle(fontSize: 11, color: Colors.white70),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 10),
                           Container(

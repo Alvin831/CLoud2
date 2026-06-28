@@ -16,7 +16,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   static const List<_OnboardingData> _slides = [
     _OnboardingData(
-      icon: Icons.sports_bar_rounded,
+      imageAsset: 'assets/images/logo.png',
       iconColor: AppColors.neonGreen,
       title: 'Temukan Tempat\nBilliard Terbaik',
       subtitle:
@@ -129,19 +129,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icon illustration
+              // Icon or Image illustration
               Container(
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: data.iconColor.withValues(alpha: 0.12),
+                  color: data.imageAsset != null ? Colors.transparent : data.iconColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
-                  border: Border.all(
+                  border: data.imageAsset != null ? null : Border.all(
                     color: data.iconColor.withValues(alpha: 0.3),
                     width: 1.5,
                   ),
                 ),
-                child: Icon(data.icon, color: data.iconColor, size: 56),
+                child: data.imageAsset != null
+                    ? Image.asset(data.imageAsset!, fit: BoxFit.contain)
+                    : Icon(data.icon, color: data.iconColor, size: 56),
               ),
               const SizedBox(height: 48),
 
@@ -263,14 +265,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
 }
 
 class _OnboardingData {
-  final IconData icon;
+  final IconData? icon;
+  final String? imageAsset;
   final Color iconColor;
   final String title;
   final String subtitle;
   final List<Color> gradient;
 
   const _OnboardingData({
-    required this.icon,
+    this.icon,
+    this.imageAsset,
     required this.iconColor,
     required this.title,
     required this.subtitle,
