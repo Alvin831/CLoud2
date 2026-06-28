@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/models/billiard_place.dart';
 import '../../core/providers/favorite_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/place_image.dart';
+import '../reservation/reservation_page.dart';
+import '../auth/login_page.dart';
+import '../map/route_page.dart';
 
 class DetailPage extends StatefulWidget {
   final BilliardPlace place;
@@ -33,10 +36,13 @@ class _DetailPageState extends State<DetailPage> {
     super.dispose();
   }
 
-  Future<void> _openMaps() async {
-    final p = widget.place;
-    final uri = Uri.parse('https://maps.google.com/?q=${p.latitude},${p.longitude}');
-    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  void _openRoute() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RoutePage(place: widget.place),
+      ),
+    );
   }
 
   @override
@@ -202,7 +208,7 @@ class _DetailPageState extends State<DetailPage> {
                 border: Border.all(color: AppColors.neonGreen.withOpacity(0.4)),
               ),
               child: Text(
-                'Rp ${p.pricePerHour.toInt()}k/jam',
+                'Rp ${(p.pricePerHour / 1000).toStringAsFixed(0)}k/jam',
                 style: const TextStyle(fontSize: 12, color: AppColors.neonGreen, fontWeight: FontWeight.w600),
               ),
             ),
@@ -396,39 +402,85 @@ class _DetailPageState extends State<DetailPage> {
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.divider)),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: _openMaps,
-              icon: const Icon(Icons.directions_rounded, size: 18),
-              label: const Text('Buka Rute'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.neonGreen,
-                side: const BorderSide(color: AppColors.neonGreen),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Consumer<FavoriteProvider>(
-              builder: (_, favProvider, __) {
-                final isFav = favProvider.isFavorite(p.id);
-                return ElevatedButton.icon(
-                  onPressed: () => favProvider.toggle(p),
-                  icon: Icon(isFav ? Icons.favorite_rounded : Icons.favorite_outline_rounded, size: 18),
-                  label: Text(isFav ? 'Tersimpan' : 'Simpan'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isFav ? AppColors.surfaceVariant : AppColors.neonGreen,
-                    foregroundColor: isFav ? AppColors.textPrimary : Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openRoute,
+                  icon: const Icon(Icons.directions_rounded, size: 18),
+                  label: const Text('Rute'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.neonGreen,
+                    side: const BorderSide(color: AppColors.neonGreen),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Consumer<FavoriteProvider>(
+                  builder: (_, favProvider, __) {
+                    final isFav = favProvider.isFavorite(p.id);
+                    return OutlinedButton.icon(
+                      onPressed: () => favProvider.toggle(p),
+                      icon: Icon(
+                          isFav
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_outline_rounded,
+                          size: 18),
+                      label: Text(isFav ? 'Disimpan' : 'Simpan'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            isFav ? Colors.redAccent : AppColors.textSecondary,
+                        side: BorderSide(
+                            color: isFav
+                                ? Colors.redAccent
+                                : AppColors.divider),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Tombol Reservasi — full width
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                final user = FirebaseAuth.instance.currentUser;
+                if (user == null) {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()));
+                  return;
+                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => ReservationPage(place: p)),
                 );
               },
+              icon: const Icon(Icons.receipt_long_rounded, size: 18),
+              label: const Text('Reservasi Meja',
+                  style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.neonGreen,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ),
         ],

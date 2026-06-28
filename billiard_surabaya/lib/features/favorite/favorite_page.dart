@@ -39,6 +39,14 @@ class FavoritePage extends StatelessWidget {
 
             Consumer<FavoriteProvider>(
               builder: (_, favProvider, __) {
+                if (favProvider.isLoading) {
+                  return const Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.neonGreen),
+                    ),
+                  );
+                }
+
                 final favorites = favProvider.favorites;
 
                 if (favorites.isEmpty) {

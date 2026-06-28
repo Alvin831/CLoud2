@@ -66,7 +66,7 @@ class PlaceCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Rp ${place.pricePerHour.toInt()}k/jam',
+                        'Rp ${(place.pricePerHour / 1000).toStringAsFixed(0)}k/jam',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
