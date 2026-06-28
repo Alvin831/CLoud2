@@ -81,10 +81,6 @@ class _DetailPageState extends State<DetailPage> {
                       _buildDivider(),
                       const SizedBox(height: 20),
                       _buildFacilities(p),
-                      const SizedBox(height: 20),
-                      _buildDivider(),
-                      const SizedBox(height: 20),
-                      _buildGallery(p),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -353,47 +349,6 @@ class _DetailPageState extends State<DetailPage> {
               ),
             );
           }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGallery(BilliardPlace p) {
-    if (p.galleryImages.length <= 1) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Galeri', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 90,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: p.galleryImages.length,
-            itemBuilder: (_, i) => GestureDetector(
-              onTap: () => setState(() => _selectedImageIndex = i),
-              child: Container(
-                width: 120,
-                margin: const EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: _selectedImageIndex == i ? AppColors.neonGreen : AppColors.divider,
-                    width: 2,
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(9),
-                  child: PlaceImage(
-                    imagePath: null,
-                    imageUrl: p.galleryImages[i],
-                    height: 90,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-          ),
         ),
       ],
     );
