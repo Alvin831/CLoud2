@@ -116,15 +116,10 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         const SizedBox(height: 24),
         // Logo
-        Container(
+        Image.asset(
+          'assets/images/logo.png',
           width: 52,
           height: 52,
-          decoration: BoxDecoration(
-            color: AppColors.neonGreen,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: const Icon(Icons.sports_bar_rounded,
-              color: Colors.black, size: 28),
         ),
         const SizedBox(height: 20),
         const Text(

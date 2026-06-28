@@ -137,14 +137,10 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Row(
             children: [
-              Container(
-                width: 38, height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.neonGreen,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.sports_bar_rounded,
-                    color: Colors.black, size: 22),
+              Image.asset(
+                'assets/images/logo.png',
+                width: 38,
+                height: 38,
               ),
               const SizedBox(width: 10),
               Column(
