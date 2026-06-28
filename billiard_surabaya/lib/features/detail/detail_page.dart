@@ -76,6 +76,10 @@ class _DetailPageState extends State<DetailPage> {
                       const SizedBox(height: 20),
                       _buildDivider(),
                       const SizedBox(height: 20),
+                      _buildCloudinaryGallery(p),
+                      const SizedBox(height: 20),
+                      _buildDivider(),
+                      const SizedBox(height: 20),
                       _buildFacilities(p),
                       const SizedBox(height: 20),
                       _buildDivider(),
@@ -395,6 +399,75 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
+  Widget _buildCloudinaryGallery(BilliardPlace p) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Galeri', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+        const SizedBox(height: 12),
+        if (p.galleryImg.isEmpty)
+          const Text('Belum ada galeri.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary))
+        else
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: p.galleryImg.length,
+              itemBuilder: (context, i) {
+                final imageUrl = p.galleryImg[i];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullScreenImagePage(imageUrl: imageUrl),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 120,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.divider),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(11),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: AppColors.neonGreen,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.surfaceVariant,
+                            child: const Center(
+                              child: Icon(Icons.broken_image_rounded, color: AppColors.textMuted),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildBottomActions(BilliardPlace p) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -490,5 +563,36 @@ class _DetailPageState extends State<DetailPage> {
 
   Widget _buildDivider() {
     return const Divider(color: AppColors.divider, height: 1);
+  }
+}
+
+class FullScreenImagePage extends StatelessWidget {
+  final String imageUrl;
+  const FullScreenImagePage({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.network(
+            imageUrl,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return const CircularProgressIndicator(color: AppColors.neonGreen);
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.broken_image_rounded, color: Colors.white, size: 50);
+            },
+          ),
+        ),
+      ),
+    );
   }
 }

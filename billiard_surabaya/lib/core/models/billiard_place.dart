@@ -12,6 +12,7 @@ class BilliardPlace {
   final String imageUrl;
   final String? imagePath; // nama file lokal, e.g. "zuper.jpg"
   final List<String> galleryImages;
+  final List<String> galleryImg;
   final bool isOpen;
   final String operatingHours;
   final double pricePerHour;
@@ -32,6 +33,7 @@ class BilliardPlace {
     required this.imageUrl,
     this.imagePath,
     required this.galleryImages,
+    this.galleryImg = const [],
     required this.isOpen,
     required this.operatingHours,
     required this.pricePerHour,
@@ -65,6 +67,7 @@ class BilliardPlace {
       imageUrl: data['image_url'] as String? ?? '',
       imagePath: data['imagePath'] as String?,
       galleryImages: List<String>.from(data['galleryImg'] ?? data['gallery_images'] ?? []),
+      galleryImg: List<String>.from(data['galleryImg'] ?? data['gallery_images'] ?? []),
       isOpen: data['is_open'] as bool? ?? true,
       operatingHours: data['operating_hours'] as String? ?? '10:00 – 24:00',
       pricePerHour: (data['price_per_hour'] as num?)?.toDouble() ?? 0.0,
@@ -76,7 +79,7 @@ class BilliardPlace {
   }
 
   // ── copyWith: dipakai untuk update distanceKm setelah GPS didapat ──────────
-  BilliardPlace copyWith({double? distanceKm}) {
+  BilliardPlace copyWith({double? distanceKm, List<String>? galleryImg}) {
     return BilliardPlace(
       id: id,
       name: name,
@@ -89,6 +92,7 @@ class BilliardPlace {
       imageUrl: imageUrl,
       imagePath: imagePath,
       galleryImages: galleryImages,
+      galleryImg: galleryImg ?? this.galleryImg,
       isOpen: isOpen,
       operatingHours: operatingHours,
       pricePerHour: pricePerHour,
