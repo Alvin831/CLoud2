@@ -10,6 +10,7 @@ class Reservation {
   final DateTime date;
   final String timeSlot;      // e.g. "14:00 – 16:00"
   final int tableNumber;
+  final String tableType;     // "Reguler" atau "VIP"
   final int durationHours;
   final double totalPrice;
   final String status;        // 'confirmed' | 'cancelled'
@@ -26,6 +27,7 @@ class Reservation {
     required this.date,
     required this.timeSlot,
     required this.tableNumber,
+    required this.tableType,
     required this.durationHours,
     required this.totalPrice,
     required this.status,
@@ -45,6 +47,7 @@ class Reservation {
       date: (d['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
       timeSlot: d['time_slot'] as String? ?? '',
       tableNumber: (d['table_number'] as num?)?.toInt() ?? 1,
+      tableType: d['table_type'] as String? ?? 'Reguler',
       durationHours: (d['duration_hours'] as num?)?.toInt() ?? 1,
       totalPrice: (d['total_price'] as num?)?.toDouble() ?? 0,
       status: d['status'] as String? ?? 'confirmed',
@@ -62,6 +65,7 @@ class Reservation {
     'date': Timestamp.fromDate(date),
     'time_slot': timeSlot,
     'table_number': tableNumber,
+    'table_type': tableType,
     'duration_hours': durationHours,
     'total_price': totalPrice,
     'status': status,

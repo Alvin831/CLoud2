@@ -15,6 +15,7 @@ class BilliardPlace {
   final bool isOpen;
   final String operatingHours;
   final double pricePerHour;
+  final double priceVipPerHour;
   final double latitude;
   final double longitude;
   final List<String> facilities;
@@ -35,6 +36,7 @@ class BilliardPlace {
     required this.isOpen,
     required this.operatingHours,
     required this.pricePerHour,
+    required this.priceVipPerHour,
     required this.latitude,
     required this.longitude,
     required this.facilities,
@@ -68,6 +70,8 @@ class BilliardPlace {
       isOpen: data['is_open'] as bool? ?? true,
       operatingHours: data['operating_hours'] as String? ?? '10:00 – 24:00',
       pricePerHour: (data['price_per_hour'] as num?)?.toDouble() ?? 0.0,
+      priceVipPerHour: (data['price_vip_per_hour'] as num?)?.toDouble() ??
+          (((data['price_per_hour'] as num?)?.toDouble() ?? 0.0) + 20000.0),
       latitude: (data['lat'] as num?)?.toDouble() ?? 0.0,
       longitude: (data['lng'] as num?)?.toDouble() ?? 0.0,
       facilities: List<String>.from(data['facilities'] ?? []),
@@ -92,10 +96,50 @@ class BilliardPlace {
       isOpen: isOpen,
       operatingHours: operatingHours,
       pricePerHour: pricePerHour,
+      priceVipPerHour: priceVipPerHour,
       latitude: latitude,
       longitude: longitude,
       facilities: facilities,
       tableCount: tableCount,
     );
   }
+
+  // ── Getter: Cek otomatis apakah buka berdasarkan jam saat ini ──────────
+  bool get isCurrentlyOpen {
+    try {
+      if (operatingHours.isEmpty || !operatingHours.contains('-')) return isOpen;
+      
+      // Bersihkan string dari karakter aneh jika ada (misal en-dash)
+      final cleanHours = operatingHours.replaceAll('–', '-');
+      final parts = cleanHours.split('-');
+      if (parts.length != 2) return isOpen;
+      
+      final openTimeParts = parts[0].trim().split(':');
+      final closeTimeParts = parts[1].trim().split(':');
+      
+      if (openTimeParts.length < 2 || closeTimeParts.length < 2) return isOpen;
+      
+      final openHour = int.parse(openTimeParts[0]);
+      final openMin = int.parse(openTimeParts[1]);
+      
+      final closeHour = int.parse(closeTimeParts[0]);
+      final closeMin = int.parse(closeTimeParts[1]);
+      
+      final now = DateTime.now();
+      final nowMins = now.hour * 60 + now.minute;
+      final openMins = openHour * 60 + openMin;
+      final closeMins = closeHour * 60 + closeMin;
+      
+      if (closeMins <= openMins) {
+        // Buka lewat tengah malam (misal 11:00 sampai 03:00 besoknya)
+        return nowMins >= openMins || nowMins <= closeMins;
+      } else {
+        // Buka di hari yang sama (misal 10:00 sampai 22:00)
+        return nowMins >= openMins && nowMins <= closeMins;
+      }
+    } catch (e) {
+      return isOpen; // Fallback ke manual dari Firebase jika error parsing
+    }
+  }
 }
+

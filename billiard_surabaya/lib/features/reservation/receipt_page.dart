@@ -195,6 +195,7 @@ class ReceiptPage extends StatelessWidget {
           ),
           _receiptRow(Icons.access_time_rounded, 'Waktu', r.timeSlot),
           _receiptRow(Icons.timer_rounded, 'Durasi', '${r.durationHours} jam'),
+          _receiptRow(Icons.weekend_rounded, 'Tipe Meja', r.tableType),
           _receiptRow(Icons.person_rounded, 'Atas Nama', r.userName),
           const SizedBox(height: 12),
           const Divider(color: AppColors.divider, height: 1),

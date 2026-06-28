@@ -695,18 +695,18 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: (p.isOpen
+                              color: (p.isCurrentlyOpen
                                       ? AppColors.open
                                       : AppColors.closed)
                                   .withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              p.isOpen ? 'Buka' : 'Tutup',
+                              p.isCurrentlyOpen ? 'Buka' : 'Tutup',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: p.isOpen
+                                color: p.isCurrentlyOpen
                                     ? AppColors.open
                                     : AppColors.closed,
                               ),
@@ -962,7 +962,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                                 horizontal: 5,
                                                 vertical: 1),
                                         decoration: BoxDecoration(
-                                          color: (p.isOpen
+                                          color: (p.isCurrentlyOpen
                                                   ? AppColors.open
                                                   : AppColors.closed)
                                               .withOpacity(0.1),
@@ -970,11 +970,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                               BorderRadius.circular(4),
                                         ),
                                         child: Text(
-                                          p.isOpen ? 'Buka' : 'Tutup',
+                                          p.isCurrentlyOpen ? 'Buka' : 'Tutup',
                                           style: TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.w600,
-                                            color: p.isOpen
+                                            color: p.isCurrentlyOpen
                                                 ? AppColors.open
                                                 : AppColors.closed,
                                           ),
