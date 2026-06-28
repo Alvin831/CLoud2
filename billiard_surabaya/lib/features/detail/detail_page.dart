@@ -156,7 +156,7 @@ class _DetailPageState extends State<DetailPage> {
           fit: StackFit.expand,
           children: [
             PlaceImage(
-              imagePath: p.imagePath,
+              imagePath: _selectedImageIndex == 0 ? p.imagePath : null,
               imageUrl: p.galleryImages.isNotEmpty
                   ? p.galleryImages[_selectedImageIndex]
                   : p.imageUrl,
@@ -381,7 +381,7 @@ class _DetailPageState extends State<DetailPage> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(9),
                   child: PlaceImage(
-                    imagePath: p.imagePath,
+                    imagePath: null,
                     imageUrl: p.galleryImages[i],
                     height: 90,
                     fit: BoxFit.cover,

@@ -64,7 +64,7 @@ class BilliardPlace {
       distanceKm: 0.0, // akan diisi ulang oleh PlaceService.attachDistances()
       imageUrl: data['image_url'] as String? ?? '',
       imagePath: data['imagePath'] as String?,
-      galleryImages: List<String>.from(data['gallery_images'] ?? []),
+      galleryImages: List<String>.from(data['galleryImg'] ?? data['gallery_images'] ?? []),
       isOpen: data['is_open'] as bool? ?? true,
       operatingHours: data['operating_hours'] as String? ?? '10:00 – 24:00',
       pricePerHour: (data['price_per_hour'] as num?)?.toDouble() ?? 0.0,
