@@ -568,7 +568,7 @@ class _RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
             children: [
               _buildInfoChip(
                 icon: Icons.straighten_rounded,
-                label: '${_distanceKm.toStringAsFixed(1)} km',
+                label: '${_distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km',
                 color: const Color(0xFF2196F3),
               ),
               const SizedBox(width: 10),

@@ -145,5 +145,9 @@ class BilliardPlace {
       return isOpen; // Fallback ke manual dari Firebase jika error parsing
     }
   }
+
+  /// Jarak terformat untuk tampilan yang lebih ramah pengguna (contoh: "3,4 km")
+  String get formattedDistance =>
+      '${distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km';
 }
 

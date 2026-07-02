@@ -79,12 +79,17 @@ class ReservationProvider extends ChangeNotifier {
       final snap = await _db
           .collection('reservations')
           .where('user_id', isEqualTo: userId)
-          .orderBy('created_at', descending: true)
           .get();
-      _myReservations = snap.docs
+      final list = snap.docs
           .map((doc) => Reservation.fromFirestore(doc))
           .toList();
-    } catch (_) {
+      // Urutkan secara in-memory berdasarkan created_at descending (terbaru di atas)
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      _myReservations = list;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching reservations: $e');
+      }
       _myReservations = [];
     }
     _isLoading = false;
@@ -96,7 +101,11 @@ class ReservationProvider extends ChangeNotifier {
     try {
       final doc = await _db.collection('reservations').doc(id).get();
       if (doc.exists) return Reservation.fromFirestore(doc);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting reservation by id: $e');
+      }
+    }
     return null;
   }
 
@@ -105,7 +114,11 @@ class ReservationProvider extends ChangeNotifier {
     try {
       await _db.collection('reservations').doc(id).update({'status': 'cancelled'});
       await fetchMyReservations(userId);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error cancelling reservation: $e');
+      }
+    }
   }
 
   // ── Generate kode resi unik ────────────────────────────────────────────────

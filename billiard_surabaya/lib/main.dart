@@ -11,6 +11,7 @@ import 'core/providers/billiard_provider.dart';
 import 'core/providers/favorite_provider.dart';
 import 'core/providers/reservation_provider.dart';
 import 'core/providers/forum_provider.dart';
+import 'core/providers/review_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/onboarding/onboarding_page.dart';
 import 'features/main/main_shell.dart';
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(create: (_) => ReservationProvider()),
         ChangeNotifierProvider(create: (_) => ForumProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
       ],
       child: MaterialApp(
         title: 'Billiard Surabaya',
@@ -87,9 +89,11 @@ class _AuthGateState extends State<AuthGate> {
         // User baru login (atau app baru dibuka dengan user sudah login)
         if (user != null && _previousUser?.uid != user.uid) {
           _previousUser = user;
-          // Load favorit dari Firestore untuk user ini
+          // Load favorit & reservasi dari Firestore untuk user ini
           WidgetsBinding.instance.addPostFrameCallback((_) {
             favProvider.loadFavorites();
+            context.read<ReservationProvider>().fetchMyReservations(user.uid);
+            context.read<ReviewProvider>().fetchReviewsForUser(user.uid);
           });
         }
 
@@ -98,6 +102,7 @@ class _AuthGateState extends State<AuthGate> {
           _previousUser = null;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             favProvider.clearLocal();
+            context.read<ReviewProvider>().clearLocal();
           });
         }
 

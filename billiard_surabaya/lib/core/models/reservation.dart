@@ -72,4 +72,22 @@ class Reservation {
     'receipt_code': receiptCode,
     'created_at': Timestamp.fromDate(createdAt),
   };
+
+  /// Cek apakah reservasi ini sudah lewat waktunya
+  bool get isPast {
+    try {
+      final parts = timeSlot.split('–');
+      if (parts.length == 2) {
+        final endPart = parts[1].trim(); // e.g. "16:00"
+        final hourStr = endPart.split(':')[0]; // "16"
+        final endHour = int.parse(hourStr);
+        final endDateTime = DateTime(date.year, date.month, date.day, endHour);
+        return endDateTime.isBefore(DateTime.now());
+      }
+    } catch (_) {}
+    // Fallback: cek berdasarkan tanggal saja
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    return date.isBefore(todayDate);
+  }
 }

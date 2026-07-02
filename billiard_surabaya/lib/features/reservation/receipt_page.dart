@@ -8,7 +8,12 @@ import 'reservation_history_page.dart';
 
 class ReceiptPage extends StatelessWidget {
   final String reservationId;
-  const ReceiptPage({super.key, required this.reservationId});
+  final bool fromHistory;
+  const ReceiptPage({
+    super.key,
+    required this.reservationId,
+    this.fromHistory = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -16,15 +21,29 @@ class ReceiptPage extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Resi Reservasi'),
-        automaticallyImplyLeading: false,
-        actions: [
-          TextButton(
-            onPressed: () =>
-                Navigator.of(context).popUntil((r) => r.isFirst),
-            child: const Text('Selesai',
-                style: TextStyle(color: AppColors.neonGreen)),
-          ),
-        ],
+        leading: fromHistory
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        automaticallyImplyLeading: fromHistory,
+        actions: fromHistory
+            ? null
+            : [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).popUntil((r) => r.isFirst);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ReservationHistoryPage()),
+                    );
+                  },
+                  child: const Text('Selesai',
+                      style: TextStyle(color: AppColors.neonGreen)),
+                ),
+              ],
       ),
       body: FutureBuilder<Reservation?>(
         future: context
@@ -287,15 +306,25 @@ class ReceiptPage extends StatelessWidget {
   }
 
   Widget _buildHomeButton(BuildContext context) {
+    if (fromHistory) {
+      return const SizedBox.shrink();
+    }
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
           height: 52,
           child: ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-            icon: const Icon(Icons.home_rounded, size: 20),
-            label: const Text('Kembali ke Beranda',
+            onPressed: () {
+              Navigator.of(context).popUntil((r) => r.isFirst);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const ReservationHistoryPage()),
+              );
+            },
+            icon: const Icon(Icons.history_rounded, size: 20),
+            label: const Text('Lihat Riwayat Reservasi',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.neonGreen,
@@ -311,16 +340,9 @@ class ReceiptPage extends StatelessWidget {
           width: double.infinity,
           height: 48,
           child: OutlinedButton.icon(
-            onPressed: () {
-              Navigator.of(context).popUntil((r) => r.isFirst);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const ReservationHistoryPage()),
-              );
-            },
-            icon: const Icon(Icons.history_rounded, size: 18),
-            label: const Text('Lihat Semua Riwayat',
+            onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+            icon: const Icon(Icons.home_rounded, size: 18),
+            label: const Text('Kembali ke Beranda',
                 style: TextStyle(fontSize: 14)),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textSecondary,

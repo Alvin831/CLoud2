@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/auth_provider.dart' as app_auth;
 import '../../core/providers/favorite_provider.dart';
+import '../../core/providers/reservation_provider.dart';
+import '../../core/providers/review_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../reservation/reservation_history_page.dart';
 
@@ -151,8 +153,13 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildStatsRow(BuildContext context) {
-    return Consumer<FavoriteProvider>(
-      builder: (context, favorites, _) {
+    return Consumer3<FavoriteProvider, ReservationProvider, ReviewProvider>(
+      builder: (context, favorites, reservations, reviews, _) {
+        // Kunjungan dinamis: Reservasi confirmed yang sudah lewat (isPast)
+        final visitCount = reservations.myReservations
+            .where((r) => r.status == 'confirmed' && r.isPast)
+            .length;
+
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
@@ -162,11 +169,11 @@ class ProfilePage extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _buildStat('0', 'Kunjungan'),
+              _buildStat('$visitCount', 'Kunjungan'),
               _buildStatDivider(),
               _buildStat('${favorites.favorites.length}', 'Favorit'),
               _buildStatDivider(),
-              _buildStat('0', 'Ulasan'),
+              _buildStat('${reviews.userReviews.length}', 'Ulasan'),
             ],
           ),
         );

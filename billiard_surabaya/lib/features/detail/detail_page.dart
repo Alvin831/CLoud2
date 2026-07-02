@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/models/billiard_place.dart';
+import '../../core/models/review.dart';
 import '../../core/providers/favorite_provider.dart';
+import '../../core/providers/billiard_provider.dart';
+import '../../core/providers/review_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/place_image.dart';
 import '../reservation/reservation_page.dart';
@@ -28,6 +31,9 @@ class _DetailPageState extends State<DetailPage> {
     _scrollController.addListener(() {
       setState(() => _isScrolled = _scrollController.offset > 200);
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ReviewProvider>().fetchReviewsForPlace(widget.place.id);
+    });
   }
 
   @override
@@ -47,7 +53,10 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final p = widget.place;
+    final p = context.watch<BilliardProvider>().allPlaces.firstWhere(
+          (place) => place.id == widget.place.id,
+          orElse: () => widget.place,
+        );
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -81,6 +90,10 @@ class _DetailPageState extends State<DetailPage> {
                       _buildDivider(),
                       const SizedBox(height: 20),
                       _buildFacilities(p),
+                      const SizedBox(height: 20),
+                      _buildDivider(),
+                      const SizedBox(height: 20),
+                      _buildReviewsSection(p),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -288,7 +301,7 @@ class _DetailPageState extends State<DetailPage> {
                       const Icon(Icons.near_me_rounded, color: AppColors.neonGreen, size: 12),
                       const SizedBox(width: 4),
                       Text(
-                        '${p.distanceKm} km dari lokasi Anda',
+                        '${p.formattedDistance} dari lokasi Anda',
                         style: const TextStyle(fontSize: 11, color: AppColors.neonGreen),
                       ),
                     ],
@@ -514,6 +527,401 @@ class _DetailPageState extends State<DetailPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildReviewsSection(BilliardPlace p) {
+    return Consumer<ReviewProvider>(
+      builder: (context, reviewProvider, _) {
+        final reviews = reviewProvider.placeReviews;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Ulasan Pengguna',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.neonGreen.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${p.reviewCount}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.neonGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => _showWriteReviewSheet(context, p),
+                  icon: const Icon(Icons.rate_review_rounded, size: 16, color: AppColors.neonGreen),
+                  label: const Text(
+                    'Tulis Ulasan',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.neonGreen,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (reviewProvider.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: CircularProgressIndicator(color: AppColors.neonGreen),
+                ),
+              )
+            else if (reviews.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.divider),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.star_outline_rounded, color: AppColors.textMuted, size: 36),
+                    SizedBox(height: 8),
+                    Text(
+                      'Belum ada ulasan',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Jadilah yang pertama memberikan ulasan tempat ini!',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: reviews.map((r) => _buildReviewCard(r)).toList(),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildReviewCard(Review r) {
+    final initials = r.userName.isNotEmpty ? r.userName[0].toUpperCase() : 'P';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.neonGreen.withOpacity(0.15),
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.neonGreen,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      r.userName,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: List.generate(5, (index) {
+                        return Icon(
+                          index < r.rating.floor()
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          color: AppColors.rating,
+                          size: 14,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                _formatDate(r.createdAt),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+          if (r.comment.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              r.comment,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showWriteReviewSheet(BuildContext context, BilliardPlace p) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+      return;
+    }
+
+    double selectedRating = 5.0;
+    final commentController = TextEditingController();
+    bool isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (stContext, setState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                14,
+                20,
+                MediaQuery.of(stContext).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.divider,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Berikan Ulasan',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    p.name,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  Center(
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Bagaimana pengalaman Anda?',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(5, (index) {
+                            final starRating = index + 1.0;
+                            final isSelected = starRating <= selectedRating;
+                            return GestureDetector(
+                              onTap: isSubmitting
+                                  ? null
+                                  : () => setState(() => selectedRating = starRating),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Icon(
+                                  isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
+                                  color: AppColors.rating,
+                                  size: 38,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  TextField(
+                    controller: commentController,
+                    maxLines: 4,
+                    maxLength: 250,
+                    enabled: !isSubmitting,
+                    style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Bagikan detail pengalaman Anda tentang meja, pelayanan, atau fasilitas tempat biliar ini...',
+                      hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                      fillColor: AppColors.surfaceVariant,
+                      filled: true,
+                      contentPadding: const EdgeInsets.all(14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.divider),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.neonGreen),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              final comment = commentController.text;
+                              setState(() => isSubmitting = true);
+                              
+                              final reviewProvider = context.read<ReviewProvider>();
+                              final billiardProvider = context.read<BilliardProvider>();
+                              
+                              final success = await reviewProvider.addReview(
+                                placeId: p.id,
+                                placeName: p.name,
+                                userId: user.uid,
+                                userName: user.displayName ?? 'Pengguna',
+                                rating: selectedRating,
+                                comment: comment,
+                              );
+                              
+                              if (success) {
+                                await billiardProvider.refresh();
+                                if (stContext.mounted) {
+                                  Navigator.pop(sheetContext);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Ulasan Anda berhasil dikirim! Terima kasih.'),
+                                      backgroundColor: AppColors.open,
+                                    ),
+                                  );
+                                }
+                              } else {
+                                setState(() => isSubmitting = false);
+                                if (stContext.mounted) {
+                                  ScaffoldMessenger.of(stContext).showSnackBar(
+                                    SnackBar(
+                                      content: Text(reviewProvider.error ?? 'Gagal mengirim ulasan.'),
+                                      backgroundColor: AppColors.closed,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.neonGreen,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Kirim Ulasan',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _formatDate(DateTime dt) {
+    final months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 
   Widget _buildDivider() {

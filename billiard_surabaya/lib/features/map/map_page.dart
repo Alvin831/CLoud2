@@ -217,8 +217,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
                       return Marker(
                         point: ll.LatLng(p.latitude, p.longitude),
-                        width: 130,
-                        height: 48,
+                        width: 50,
+                        height: 55,
                         child: GestureDetector(
                           onTap: () => _selectPlace(p),
                           child: Opacity(
@@ -226,69 +226,37 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Circular place image avatar
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 6),
+                                  width: 44,
+                                  height: 44,
                                   decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? AppColors.neonGreen
-                                        : AppColors.surface,
-                                    borderRadius: BorderRadius.circular(20),
+                                    shape: BoxShape.circle,
                                     border: Border.all(
                                       color: isSelected
                                           ? AppColors.neonGreen
-                                          : AppColors.divider,
-                                      width: 1.5,
+                                          : Colors.white,
+                                      width: isSelected ? 3.0 : 2.0,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: isSelected
-                                            ? AppColors.neonGreen
-                                                .withOpacity(0.5)
-                                            : Colors.black.withOpacity(0.4),
-                                        blurRadius: isSelected ? 12 : 4,
+                                            ? AppColors.neonGreen.withOpacity(0.6)
+                                            : Colors.black.withOpacity(0.5),
+                                        blurRadius: isSelected ? 10 : 4,
                                         spreadRadius: isSelected ? 2 : 0,
                                       ),
                                     ],
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.sports_bar_rounded,
-                                          size: 12,
-                                          color: isSelected
-                                              ? Colors.black
-                                              : AppColors.neonGreen),
-                                      const SizedBox(width: 4),
-                                      Flexible(
-                                        child: Text(
-                                          p.name.split(' ').first,
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            color: isSelected
-                                                ? Colors.black
-                                                : AppColors.textPrimary,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      // Jarak kecil jika GPS aktif
-                                      if (hasLoc) ...[
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${p.distanceKm.toStringAsFixed(1)}km',
-                                          style: TextStyle(
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w600,
-                                            color: isSelected
-                                                ? Colors.black54
-                                                : AppColors.textMuted,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(22),
+                                    child: PlaceImage(
+                                      imagePath: p.imagePath,
+                                      imageUrl: p.imageUrl,
+                                      height: 44,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                                 // Triangle pointer
@@ -670,7 +638,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                 color: AppColors.neonGreen, size: 12),
                             const SizedBox(width: 2),
                             Text(
-                              '${p.distanceKm.toStringAsFixed(1)} km',
+                              p.formattedDistance,
                               style: const TextStyle(
                                   fontSize: 11,
                                   color: AppColors.neonGreen,
@@ -998,7 +966,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  '${p.distanceKm.toStringAsFixed(1)} km',
+                                  p.formattedDistance,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,

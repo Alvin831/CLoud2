@@ -29,47 +29,84 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Riwayat Reservasi'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Riwayat Reservasi'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => Navigator.pop(context),
+          ),
+          bottom: const TabBar(
+            indicatorColor: AppColors.neonGreen,
+            labelColor: AppColors.neonGreen,
+            unselectedLabelColor: AppColors.textMuted,
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: AppColors.divider,
+            labelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+            tabs: [
+              Tab(text: 'Aktif'),
+              Tab(text: 'Selesai & Batal'),
+            ],
+          ),
+        ),
+        body: Consumer<ReservationProvider>(
+          builder: (context, provider, _) {
+            if (provider.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.neonGreen),
+              );
+            }
+
+            final allReservations = provider.myReservations;
+            final activeReservations = allReservations
+                .where((r) => r.status == 'confirmed' && !r.isPast)
+                .toList();
+            final pastReservations = allReservations
+                .where((r) => r.status == 'cancelled' || r.isPast)
+                .toList();
+
+            return TabBarView(
+              children: [
+                _buildReservationList(context, activeReservations, provider, 'aktif'),
+                _buildReservationList(context, pastReservations, provider, 'riwayat'),
+              ],
+            );
+          },
         ),
       ),
-      body: Consumer<ReservationProvider>(
-        builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.neonGreen),
-            );
-          }
+    );
+  }
 
-          final reservations = provider.myReservations;
-          if (reservations.isEmpty) {
-            return _buildEmptyState();
-          }
+  Widget _buildReservationList(
+    BuildContext context,
+    List<Reservation> reservations,
+    ReservationProvider provider,
+    String type,
+  ) {
+    if (reservations.isEmpty) {
+      return _buildEmptyState(type);
+    }
 
-          return RefreshIndicator(
-            color: AppColors.neonGreen,
-            backgroundColor: AppColors.card,
-            onRefresh: () async {
-              final uid =
-                  context.read<app_auth.AuthProvider>().currentUser?.uid;
-              if (uid != null) {
-                await provider.fetchMyReservations(uid);
-              }
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: reservations.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, i) =>
-                  _buildReservationCard(context, reservations[i], provider),
-            ),
-          );
-        },
+    return RefreshIndicator(
+      color: AppColors.neonGreen,
+      backgroundColor: AppColors.card,
+      onRefresh: () async {
+        final uid =
+            context.read<app_auth.AuthProvider>().currentUser?.uid;
+        if (uid != null) {
+          await provider.fetchMyReservations(uid);
+        }
+      },
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: reservations.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (_, i) =>
+            _buildReservationCard(context, reservations[i], provider),
       ),
     );
   }
@@ -79,9 +116,21 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
     Reservation r,
     ReservationProvider provider,
   ) {
-    final isConfirmed = r.status == 'confirmed';
-    final statusColor = isConfirmed ? AppColors.neonGreen : AppColors.closed;
-    final isPast = r.date.isBefore(DateTime.now());
+    final isCancelled = r.status == 'cancelled';
+    final isPast = r.isPast;
+
+    final Color statusColor;
+    final String statusText;
+    if (isCancelled) {
+      statusColor = AppColors.closed;
+      statusText = 'Dibatalkan';
+    } else if (isPast) {
+      statusColor = AppColors.neonBlue;
+      statusText = 'Selesai';
+    } else {
+      statusColor = AppColors.neonGreen;
+      statusText = 'Dikonfirmasi';
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -132,7 +181,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                             color: statusColor.withValues(alpha: 0.4)),
                       ),
                       child: Text(
-                        isConfirmed ? 'Dikonfirmasi' : 'Dibatalkan',
+                        statusText,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -220,7 +269,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
-                                ReceiptPage(reservationId: r.id),
+                                ReceiptPage(reservationId: r.id, fromHistory: true),
                           ),
                         ),
                         icon: const Icon(Icons.receipt_long_rounded,
@@ -239,7 +288,7 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
                     ),
 
                     // Batalkan (hanya kalau confirmed & belum lewat)
-                    if (isConfirmed && !isPast) ...[
+                    if (r.status == 'confirmed' && !isPast) ...[
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
@@ -333,7 +382,8 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(String type) {
+    final isAktif = type == 'aktif';
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -344,23 +394,35 @@ class _ReservationHistoryPageState extends State<ReservationHistoryPage> {
               color: AppColors.surfaceVariant,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.receipt_long_outlined,
-                color: AppColors.textMuted, size: 48),
+            child: Icon(
+              isAktif ? Icons.calendar_today_outlined : Icons.history_rounded,
+              color: AppColors.textMuted,
+              size: 48,
+            ),
           ),
           const SizedBox(height: 20),
-          const Text('Belum Ada Reservasi',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary)),
+          Text(
+            isAktif ? 'Belum Ada Reservasi Aktif' : 'Belum Ada Riwayat',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 8),
-          const Text(
-            'Reservasi meja billiard kamu\nakan muncul di sini.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              isAktif
+                  ? 'Kamu tidak memiliki reservasi aktif saat ini. Yuk buat reservasi baru!'
+                  : 'Semua riwayat reservasi selesai atau batal akan muncul di sini.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,
-                height: 1.5),
+                height: 1.5,
+              ),
+            ),
           ),
         ],
       ),

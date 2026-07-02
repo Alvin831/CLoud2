@@ -33,10 +33,10 @@ class PlaceCard extends StatelessWidget {
                     imageUrl: place.imageUrl,
                     height: 160,
                   ),
-                  // Status badge
+                  // Status badge (buka/tutup) di kanan atas
                   Positioned(
                     top: 12,
-                    left: 12,
+                    right: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
@@ -52,26 +52,6 @@ class PlaceCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color:
                               place.isCurrentlyOpen ? AppColors.open : AppColors.closed,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Price badge
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Rp ${(place.pricePerHour / 1000).toStringAsFixed(0)}k/jam',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -137,7 +117,7 @@ class PlaceCard extends StatelessWidget {
                       const Icon(Icons.near_me_rounded, color: AppColors.neonGreen, size: 13),
                       const SizedBox(width: 2),
                       Text(
-                        '${place.distanceKm} km',
+                        place.formattedDistance,
                         style: const TextStyle(fontSize: 12, color: AppColors.neonGreen, fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -147,11 +127,11 @@ class PlaceCard extends StatelessWidget {
                   // Table count + button
                   Row(
                     children: [
-                      const Icon(Icons.table_bar_rounded, color: AppColors.textMuted, size: 14),
+                      const Icon(Icons.payments_rounded, color: AppColors.textMuted, size: 14),
                       const SizedBox(width: 4),
                       Text(
-                        '${place.tableCount} meja',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        'Rp ${place.pricePerHour.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}/jam',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       SizedBox(
