@@ -40,17 +40,18 @@ class PlaceCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: place.isOpen
-                            ? AppColors.neonGreen.withOpacity(0.9)
-                            : AppColors.closed.withOpacity(0.9),
+                        color: place.isCurrentlyOpen
+                            ? AppColors.open.withOpacity(0.15)
+                            : AppColors.closed.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        place.isOpen ? 'Buka' : 'Tutup',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                        place.isCurrentlyOpen ? 'Buka' : 'Tutup',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              place.isCurrentlyOpen ? AppColors.open : AppColors.closed,
                         ),
                       ),
                     ),

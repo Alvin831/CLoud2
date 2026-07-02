@@ -232,17 +232,17 @@ class _DetailPageState extends State<DetailPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                p.isOpen ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                color: p.isOpen ? AppColors.open : AppColors.closed,
+                p.isCurrentlyOpen ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                color: p.isCurrentlyOpen ? AppColors.open : AppColors.closed,
                 size: 14,
               ),
               const SizedBox(width: 4),
               Text(
-                p.isOpen ? 'Buka Sekarang' : 'Tutup',
+                p.isCurrentlyOpen ? 'Buka Sekarang' : 'Tutup',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: p.isOpen ? AppColors.open : AppColors.closed,
+                  color: p.isCurrentlyOpen ? AppColors.open : AppColors.closed,
                 ),
               ),
             ],

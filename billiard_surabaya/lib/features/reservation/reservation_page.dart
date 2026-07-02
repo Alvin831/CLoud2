@@ -19,6 +19,7 @@ class _ReservationPageState extends State<ReservationPage> {
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   int _startHour = 10;
   int _durationHours = 1;
+  bool _isVip = false;
 
   static const int _minHour = 8;
   static const int _maxStartHour = 22;
@@ -29,7 +30,8 @@ class _ReservationPageState extends State<ReservationPage> {
       '${_startHour.toString().padLeft(2, '0')}:00 – '
       '${_endHour.toString().padLeft(2, '0')}:00';
 
-  double get _totalPrice => widget.place.pricePerHour * _durationHours;
+  double get _currentPrice => _isVip ? widget.place.priceVipPerHour : widget.place.pricePerHour;
+  double get _totalPrice => _currentPrice * _durationHours;
   int get _maxDuration => 24 - _startHour;
 
   Future<void> _pickDate() async {
@@ -69,8 +71,9 @@ class _ReservationPageState extends State<ReservationPage> {
       date: _selectedDate,
       timeSlot: _timeSlotLabel,
       tableNumber: 0,
+      tableType: _isVip ? 'VIP' : 'Reguler',
       durationHours: _durationHours,
-      pricePerHour: widget.place.pricePerHour,
+      pricePerHour: _currentPrice,
     );
 
     if (!mounted) return;
@@ -113,6 +116,11 @@ class _ReservationPageState extends State<ReservationPage> {
             _buildSectionTitle('Pilih Tanggal'),
             const SizedBox(height: 10),
             _buildDatePicker(),
+            const SizedBox(height: 24),
+
+            _buildSectionTitle('Tipe Meja'),
+            const SizedBox(height: 10),
+            _buildTableTypeSelector(),
             const SizedBox(height: 24),
 
             _buildSectionTitle('Waktu & Durasi'),
@@ -191,6 +199,77 @@ class _ReservationPageState extends State<ReservationPage> {
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary),
       );
+
+  // ── Table Type Selector ──────────────────────────────────────────────────
+  Widget _buildTableTypeSelector() {
+    return Row(
+      children: [
+        Expanded(
+          child: _typeCard(
+            title: 'Reguler',
+            price: widget.place.pricePerHour,
+            isSelected: !_isVip,
+            onTap: () => setState(() => _isVip = false),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _typeCard(
+            title: 'VIP',
+            price: widget.place.priceVipPerHour,
+            isSelected: _isVip,
+            onTap: () => setState(() => _isVip = true),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _typeCard({
+    required String title,
+    required double price,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.neonGreen.withValues(alpha: 0.15)
+              : AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.neonGreen : AppColors.divider,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? AppColors.neonGreen : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Rp ${(price / 1000).toInt()}k/jam',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // ── Date picker ────────────────────────────────────────────────────────────
   Widget _buildDatePicker() {

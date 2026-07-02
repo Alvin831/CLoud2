@@ -23,6 +23,7 @@ class ReservationProvider extends ChangeNotifier {
     required DateTime date,
     required String timeSlot,
     required int tableNumber,
+    required String tableType,
     required int durationHours,
     required double pricePerHour,
   }) async {
@@ -44,6 +45,7 @@ class ReservationProvider extends ChangeNotifier {
         date: date,
         timeSlot: timeSlot,
         tableNumber: tableNumber,
+        tableType: tableType,
         durationHours: durationHours,
         totalPrice: totalPrice,
         status: 'confirmed',
